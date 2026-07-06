@@ -41,7 +41,7 @@ jobs:
             type=semver,pattern={{major}}.{{minor}}
             type=semver,pattern={{major}}
           flavor: |
-            latest=auto
+            latest=true
 
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3

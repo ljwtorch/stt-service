@@ -1,4 +1,4 @@
-# Whisper 语音转文字服务
+# stt-service 语音转文字服务
 
 基于 [OpenAI Whisper](https://github.com/openai/whisper) 的语音转文字 HTTP API 服务，运行在 Linux Debian x86 服务器上，使用 CPU 推理。
 
