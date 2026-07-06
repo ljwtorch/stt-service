@@ -1,0 +1,29 @@
+version: "3.9"
+
+services:
+  whisper:
+    image: ghcr.io/ljwtorch/stt-service:latest
+    container_name: stt-service
+    restart: unless-stopped
+    ports:
+      - "30000:30000"
+    environment:
+      # Whisper 模型：tiny / base / small / medium / large
+      WHISPER_MODEL: medium
+      # 默认转写语言（设为空则自动检测）
+      WHISPER_LANGUAGE: zh
+      # 上传文件大小上限（MB），设为 0 不代表不限（会拒绝所有文件），需无限制请设一个足够大的值
+      UPLOAD_MAX_SIZE_MB: 25
+      # 后端监听端口（需与 ports 映射一致）
+      PORT: 30000
+      # 后台转写线程数（CPU 推理建议 1）
+      MAX_WORKERS: 1
+    volumes:
+      # 持久化 Whisper 模型缓存，避免每次重启重新下载
+      - whisper-models:/root/.cache/whisper
+      # 持久化数据库和转写结果文件
+      - whisper-data:/app/data
+
+volumes:
+  whisper-models:
+  whisper-data:
