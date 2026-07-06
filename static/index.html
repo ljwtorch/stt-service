@@ -230,6 +230,12 @@ th, td {
   padding: 10px 12px;
   text-align: left;
   border-bottom: 1px solid var(--border);
+  white-space: nowrap;
+}
+
+td:first-child {
+  white-space: normal;
+  word-break: break-all;
 }
 
 th {
@@ -252,6 +258,7 @@ tr:hover td {
   font-size: 0.75rem;
   font-weight: 600;
   text-transform: uppercase;
+  white-space: nowrap;
 }
 
 .badge-pending { background: #e2e8f0; color: #475569; }
@@ -264,7 +271,7 @@ tr:hover td {
   50% { opacity: 0.6; }
 }
 
-.actions { display: flex; gap: 6px; flex-wrap: wrap; }
+.actions { display: flex; gap: 6px; flex-wrap: nowrap; align-items: center; }
 
 .empty-state {
   text-align: center;
@@ -380,10 +387,9 @@ tr:hover td {
 <div class="container">
   <header>
     <div style="display:flex; align-items:center; justify-content:center; gap:12px;">
-      <img src="/static/icon.svg" alt="" width="40" height="40">
       <h1>语音转文字服务</h1>
     </div>
-    <p>基于 OpenAI Whisper，支持上传音频文件进行语音识别，结果可下载</p>
+    <p>基于 OpenAI Whisper，支持上传音频文件进行语音识别</p>
   </header>
 
   <!-- 上传区域 -->
