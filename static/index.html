@@ -180,7 +180,7 @@ header p {
   color: var(--text);
 }
 .btn-outline:hover:not(:disabled) { background: var(--surface-hover); }
-.btn-sm { padding: 4px 10px; font-size: 0.8rem; }
+.btn-sm { padding: 4px 10px; font-size: 0.8rem; line-height: 1.4; }
 
 /* 进度条 */
 .progress-bar {
@@ -229,8 +229,13 @@ table {
 th, td {
   padding: 10px 12px;
   text-align: left;
-  border-bottom: 1px solid var(--border);
+  vertical-align: middle;
   white-space: nowrap;
+  height: 44px;
+}
+
+tr {
+  border-bottom: 1px solid var(--border);
 }
 
 td:first-child {
@@ -271,7 +276,7 @@ tr:hover td {
   50% { opacity: 0.6; }
 }
 
-.actions { display: flex; gap: 6px; flex-wrap: nowrap; align-items: center; }
+.actions-inner { display: flex; gap: 6px; flex-wrap: nowrap; align-items: center; }
 
 .empty-state {
   text-align: center;
@@ -582,7 +587,7 @@ function renderTasks(tasks) {
       <td><span class="${badgeClass}">${statusText}</span></td>
       <td>${escHtml(langDisplay)}</td>
       <td>${createdTime}</td>
-      <td class="actions">${renderActions(t)}</td>
+      <td class="actions"><div class="actions-inner">${renderActions(t)}</div></td>
     </tr>`;
   }
 
