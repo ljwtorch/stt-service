@@ -1,0 +1,6 @@
+openai-whisper
+fastapi
+uvicorn[standard]
+python-multipart
+pydantic
+pydantic-settings
