@@ -3,7 +3,8 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title> stt-service 语音转文字服务</title>
+<link rel="icon" type="image/svg+xml" href="/static/icon.svg">
+<title>Whisper 语音转文字服务</title>
 <style>
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
@@ -378,7 +379,10 @@ tr:hover td {
 
 <div class="container">
   <header>
-    <h1>语音转文字服务</h1>
+    <div style="display:flex; align-items:center; justify-content:center; gap:12px;">
+      <img src="/static/icon.svg" alt="" width="40" height="40">
+      <h1>语音转文字服务</h1>
+    </div>
     <p>基于 OpenAI Whisper，支持上传音频文件进行语音识别，结果可下载</p>
   </header>
 
@@ -414,14 +418,14 @@ tr:hover td {
   <!-- 任务列表 -->
   <div class="card">
     <div class="refresh-info">
-      <div class="card-title" style="margin-bottom:0;">转写任务列表</div>
+      <div class="card-title" style="margin-bottom:0;">任务列表</div>
       <div>
         <span id="lastUpdate">--</span>
         <button class="btn btn-outline btn-sm" onclick="refreshTasks()" style="margin-left:8px;">刷新</button>
       </div>
     </div>
     <div class="task-table-wrap" id="taskListWrap">
-      <div class="empty-state" id="emptyState">暂无转写任务，请上传音频文件开始使用</div>
+      <div class="empty-state" id="emptyState">暂无任务，请上传音频文件开始使用</div>
     </div>
   </div>
 </div>
