@@ -27,6 +27,15 @@ class Settings(BaseSettings):
     # 后台转写线程数（CPU 推理建议设为 1，串行处理即可）
     MAX_WORKERS: int = 1
 
+    # 日志目录
+    LOG_DIR: Path = Path("./data/logs")
+
+    # 单个日志文件最大大小（MB），超过后自动轮转压缩
+    LOG_MAX_SIZE_MB: int = 10
+
+    # 日志文件保留天数
+    LOG_RETENTION_DAYS: int = 30
+
     model_config = {
         "env_file": ".env",
         "env_file_encoding": "utf-8",

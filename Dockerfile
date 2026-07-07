@@ -10,8 +10,8 @@ RUN pip install --no-cache-dir -r requirements.txt
 
 COPY . .
 
-# Whisper 模型缓存和数据目录，可通过 volume 挂载持久化
-VOLUME ["/root/.cache/whisper", "/app/data"]
+# Whisper 模型缓存、数据目录、日志目录，可通过 volume 挂载持久化
+VOLUME ["/root/.cache/whisper", "/app/data", "/app/data/logs"]
 
 EXPOSE 30000
 

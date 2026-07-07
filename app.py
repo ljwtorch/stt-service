@@ -1,4 +1,3 @@
-import logging
 import os
 import tempfile
 import uuid
@@ -9,11 +8,13 @@ from typing import Optional
 from fastapi import FastAPI, File, HTTPException, Query, UploadFile
 from fastapi.responses import FileResponse, HTMLResponse
 from fastapi.staticfiles import StaticFiles
+from loguru import logger
 
 import uvicorn
 
 import database as db
 from config import settings
+from logging_config import disable_console_logging, setup_logging
 from schemas import (
     HealthResponse,
     Segment,
@@ -24,12 +25,6 @@ from schemas import (
 )
 from service import WhisperService
 from task_manager import TaskManager, delete_results, get_result_file
-
-logging.basicConfig(
-    level=logging.INFO,
-    format="%(asctime)s [%(levelname)s] %(name)s: %(message)s",
-)
-logger = logging.getLogger(__name__)
 
 # 允许的音频文件扩展名
 ALLOWED_EXTENSIONS = {".wav", ".mp3", ".flac", ".m4a", ".ogg", ".webm", ".mp4"}
@@ -59,13 +54,16 @@ async def lifespan(app: FastAPI):
     """应用生命周期：启动时初始化所有组件，退出时清理"""
     global _task_manager
 
+    # 初始化日志系统（stdout + 文件双输出）
+    console_handler_id = setup_logging()
+
     UPLOAD_DIR.mkdir(parents=True, exist_ok=True)
 
     # 初始化数据库（自动检测并建表）
     db.init_db()
 
     # 初始化 Whisper 模型
-    logger.info("正在初始化 Whisper 服务，模型: %s ...", settings.WHISPER_MODEL)
+    logger.info("正在初始化 Whisper 服务，模型: {} ...", settings.WHISPER_MODEL)
     service = WhisperService.get_instance(model_name=settings.WHISPER_MODEL)
     service.load_model()
     logger.info("Whisper 模型加载完成")
@@ -73,7 +71,10 @@ async def lifespan(app: FastAPI):
     # 初始化 TaskManager
     _task_manager = TaskManager(max_workers=settings.MAX_WORKERS)
 
-    logger.info("所有组件已就绪，监听 %s:%d", settings.HOST, settings.PORT)
+    logger.info("所有组件已就绪，监听 {}:{}", settings.HOST, settings.PORT)
+
+    # 启动完成，关闭 stdout 日志，后续日志仅写入文件
+    disable_console_logging(console_handler_id)
 
     yield
 
@@ -180,13 +181,13 @@ async def transcribe_audio(
     temp_path = await _save_upload(file)
 
     try:
-        logger.info("收到同步转写请求: %s (%.2f MB)", file.filename, temp_path.stat().st_size / 1024 / 1024)
+        logger.info("收到同步转写请求: {} ({:.2f} MB)", file.filename, temp_path.stat().st_size / 1024 / 1024)
 
         service = WhisperService.get_instance()
         lang = language or settings.WHISPER_LANGUAGE
         result = service.transcribe(temp_path, language=lang)
 
-        logger.info("同步转写完成: %s，语言: %s", file.filename, result["language"])
+        logger.info("同步转写完成: {}，语言: {}", file.filename, result["language"])
 
         return TranscribeResponse(
             text=result["text"],
@@ -197,14 +198,14 @@ async def transcribe_audio(
     except HTTPException:
         raise
     except Exception as e:
-        logger.exception("同步转写失败: %s", e)
+        logger.exception("同步转写失败: {}", e)
         raise HTTPException(status_code=500, detail=f"转写失败: {str(e)}") from e
     finally:
         if temp_path.exists():
             try:
                 os.remove(temp_path)
             except OSError as e:
-                logger.warning("清理临时文件失败 %s: %s", temp_path, e)
+                logger.warning("清理临时文件失败 {}: {}", temp_path, e)
 
 
 # ============================================================
@@ -231,7 +232,7 @@ async def submit_task(
     task_id = uuid.uuid4().hex
     temp_path = await _save_upload(file)
 
-    logger.info("提交异步任务: %s -> task_id=%s", file.filename, task_id)
+    logger.info("提交异步任务: {} -> task_id={}", file.filename, task_id)
 
     # 在数据库中创建任务记录
     lang = language or settings.WHISPER_LANGUAGE
@@ -291,7 +292,7 @@ async def delete_task(task_id: str):
     # 删除结果文件
     delete_results(task_id)
 
-    logger.info("已删除任务: %s", task_id)
+    logger.info("已删除任务: {}", task_id)
     return {"detail": "任务已删除"}
 
 
@@ -335,5 +336,5 @@ if __name__ == "__main__":
         "app:app",
         host=settings.HOST,
         port=settings.PORT,
-        log_level="info",
+        log_config=None,  # 禁用 uvicorn 默认日志配置，由 loguru 统一管理
     )

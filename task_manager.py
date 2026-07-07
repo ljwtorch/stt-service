@@ -5,17 +5,16 @@
 """
 
 import json
-import logging
 import os
 from concurrent.futures import ThreadPoolExecutor
 from pathlib import Path
 from typing import Optional
 
+from loguru import logger
+
 import database as db
 from config import settings
 from service import WhisperService
-
-logger = logging.getLogger(__name__)
 
 
 def _get_results_dir(task_id: str) -> Path:
@@ -89,7 +88,7 @@ def save_results(task_id: str, text: str, segments: list[dict]) -> Path:
         encoding="utf-8",
     )
 
-    logger.info("结果文件已保存至: %s", results_dir)
+    logger.info("结果文件已保存至: {}", results_dir)
     return results_dir
 
 
@@ -99,7 +98,7 @@ def delete_results(task_id: str) -> None:
     if results_dir.exists():
         import shutil
         shutil.rmtree(results_dir, ignore_errors=True)
-        logger.info("已删除结果文件: %s", results_dir)
+        logger.info("已删除结果文件: {}", results_dir)
 
 
 def get_result_file(task_id: str, fmt: str) -> Optional[Path]:
@@ -124,7 +123,7 @@ class TaskManager:
     def __init__(self, max_workers: int = 1):
         self._executor = ThreadPoolExecutor(max_workers=max_workers, thread_name_prefix="whisper-worker")
         self._service = WhisperService.get_instance()
-        logger.info("TaskManager 已初始化，最大工作线程数: %d", max_workers)
+        logger.info("TaskManager 已初始化，最大工作线程数: {}", max_workers)
 
     def submit_task(
         self,
@@ -138,7 +137,7 @@ class TaskManager:
         任务立即在线程池中排队执行，不阻塞调用方。
         """
         self._executor.submit(self._run_task, task_id, audio_path, language)
-        logger.info("任务已提交至后台: %s", task_id)
+        logger.info("任务已提交至后台: {}", task_id)
 
     def _run_task(
         self,
@@ -150,7 +149,7 @@ class TaskManager:
         try:
             # 更新状态为 processing
             db.update_task_processing(task_id)
-            logger.info("开始转写任务: %s", task_id)
+            logger.info("开始转写任务: {}", task_id)
 
             # 执行转写
             lang = language or settings.WHISPER_LANGUAGE
@@ -166,10 +165,10 @@ class TaskManager:
             # 保存结果文件
             save_results(task_id, text, segments)
 
-            logger.info("转写任务完成: %s，语言: %s，文本长度: %d", task_id, detected_lang, len(text))
+            logger.info("转写任务完成: {}，语言: {}，文本长度: {}", task_id, detected_lang, len(text))
 
         except Exception as e:
-            logger.exception("转写任务失败: %s", task_id)
+            logger.exception("转写任务失败: {}", task_id)
             db.update_task_failed(task_id, str(e))
 
         finally:
@@ -177,9 +176,9 @@ class TaskManager:
             if audio_path.exists():
                 try:
                     os.remove(audio_path)
-                    logger.info("已清理临时音频文件: %s", audio_path)
+                    logger.info("已清理临时音频文件: {}", audio_path)
                 except OSError as e:
-                    logger.warning("清理临时文件失败 %s: %s", audio_path, e)
+                    logger.warning("清理临时文件失败 {}: {}", audio_path, e)
 
     def shutdown(self) -> None:
         """优雅关闭线程池，等待所有任务完成"""

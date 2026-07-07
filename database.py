@@ -7,15 +7,14 @@ SQLite 数据库模块，负责任务持久化。
 """
 
 import json
-import logging
 import sqlite3
 from datetime import datetime
 from pathlib import Path
 from typing import Optional
 
-from config import settings
+from loguru import logger
 
-logger = logging.getLogger(__name__)
+from config import settings
 
 # 数据库文件名
 DB_FILENAME = "whisper.db"
@@ -78,9 +77,9 @@ def init_db() -> None:
         conn.commit()
 
         if is_new:
-            logger.info("数据库已初始化: %s", db_path)
+            logger.info("数据库已初始化: {}", db_path)
         else:
-            logger.info("使用已有数据库: %s", db_path)
+            logger.info("使用已有数据库: {}", db_path)
     finally:
         conn.close()
 

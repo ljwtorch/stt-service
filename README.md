@@ -27,8 +27,8 @@ sudo apt install -y ffmpeg python3.12 python3.12-venv
 ### 2. 克隆项目并创建虚拟环境
 
 ```bash
-git clone <你的仓库地址> whisper
-cd whisper
+git clone <你的仓库地址> stt-service
+cd stt-service
 python3.12 -m venv .venv
 source .venv/bin/activate
 ```
@@ -55,6 +55,9 @@ pip install -r requirements.txt
 | `PORT` | 服务监听端口 | `30000` |
 | `DATA_DIR` | 数据目录（存放数据库和转写结果文件） | `./data` |
 | `MAX_WORKERS` | 后台转写线程数（CPU 推理建议为 1） | `1` |
+| `LOG_DIR` | 日志文件目录 | `./data/logs` |
+| `LOG_MAX_SIZE_MB` | 单个日志文件最大大小（MB），超过后自动轮转压缩 | `10` |
+| `LOG_RETENTION_DAYS` | 日志文件保留天数 | `30` |
 
 `.env` 文件示例：
 
@@ -81,7 +84,7 @@ uvicorn app:app --host 0.0.0.0 --port 30000
 ```
 
 服务启动后会自动：
-1. 检测并初始化 SQLite 数据库（位于 `DATA_DIR/whisper.db`）
+1. 检测并初始化 SQLite 数据库（位于 `DATA_DIR/stt-service.db`）
 2. 加载 Whisper 模型（medium 约需 1-2 分钟）
 3. 启动后台任务管理器
 
@@ -93,12 +96,13 @@ uvicorn app:app --host 0.0.0.0 --port 30000
 # 拉取镜像
 docker pull ghcr.io/ljwtorch/stt-service:latest
 
-# 运行容器（挂载模型缓存和数据目录）
+# 运行容器（挂载模型缓存、数据目录和日志目录）
 docker run -d \
-  --name whisper \
+  --name stt-service \
   -p 30000:30000 \
-  -v whisper-models:/root/.cache/whisper \
-  -v whisper-data:/app/data \
+  -v stt-service-models:/root/.cache/whisper \
+  -v stt-service-data:/app/data \
+  -v stt-service-logs:/app/data/logs \
   ghcr.io/ljwtorch/stt-service:latest
 ```
 
@@ -113,12 +117,13 @@ curl 调用示例及响应示例请参阅 [docs/api.md](docs/api.md#使用示例
 ## 项目结构
 
 ```
-whisper/
+stt-service/
 ├── .gitignore          # Git 忽略规则
 ├── README.md           # 项目文档
 ├── requirements.txt    # Python 依赖
 ├── config.py           # 配置管理（环境变量）
 ├── schemas.py          # Pydantic 请求/响应模型
+├── logging_config.py   # 日志配置（loguru 统一管理）
 ├── service.py          # Whisper 转写服务（单例模式）
 ├── database.py         # SQLite 数据库管理（自动初始化）
 ├── task_manager.py     # 异步任务管理器（线程池）
@@ -127,7 +132,8 @@ whisper/
 ├── static/
 │   └── index.html      # 前端单页面
 └── data/               # 运行时数据（自动创建）
-    ├── whisper.db       # SQLite 数据库
+    ├── stt-service.db       # SQLite 数据库
+    ├── logs/            # 日志文件（自动轮转压缩）
     └── results/         # 转写结果文件
         └── {task_id}/
             ├── result.txt

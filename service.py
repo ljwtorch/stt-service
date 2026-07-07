@@ -1,11 +1,9 @@
-import logging
 import threading
 from pathlib import Path
 from typing import Optional
 
 import whisper
-
-logger = logging.getLogger(__name__)
+from loguru import logger
 
 
 class WhisperService:
@@ -37,9 +35,9 @@ class WhisperService:
             if self._model is not None:
                 return
 
-            logger.info("正在加载 Whisper 模型: %s (CPU 模式)...", self.model_name)
+            logger.info("正在加载 Whisper 模型: {} (CPU 模式)...", self.model_name)
             self._model = whisper.load_model(self.model_name, device="cpu")
-            logger.info("模型加载完成: %s", self.model_name)
+            logger.info("模型加载完成: {}", self.model_name)
 
     def transcribe(
         self,
