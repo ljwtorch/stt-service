@@ -1,15 +1,15 @@
-# API 文档
+# API Documentation
 
-启动服务后访问交互式 API 文档：
+After starting the service, access interactive API docs at:
 
-- **Swagger UI**: http://\<服务器IP\>:30000/docs
-- **ReDoc**: http://\<服务器IP\>:30000/redoc
+- **Swagger UI**: http://\<server-ip\>:30000/docs
+- **ReDoc**: http://\<server-ip\>:30000/redoc
 
 ## GET /api/v1/health
 
-健康检查，返回服务状态和当前加载的模型名称。
+Health check endpoint that returns the service status and currently loaded model.
 
-**响应示例**：
+**Response example**:
 
 ```json
 {
@@ -18,36 +18,36 @@
 }
 ```
 
-## POST /api/v1/transcribe（同步接口）
+## POST /api/v1/transcribe (Synchronous)
 
-上传音频文件并同步等待转写结果，适用于小文件场景。
+Upload an audio file and wait for the transcription result. Suitable for small files.
 
-**请求参数**：
+**Request parameters**:
 
-| 参数 | 类型 | 必填 | 说明 |
+| Parameter | Type | Required | Description |
 |---|---|---|---|
-| `file` | UploadFile | 是 | 音频文件，支持 wav/mp3/flac/m4a/ogg/webm/mp4 |
-| `language` | string | 否 | 语言代码（如 `zh`、`en`），不填使用配置默认值 |
+| `file` | UploadFile | Yes | Audio file (wav/mp3/flac/m4a/ogg/webm/mp4) |
+| `language` | string | No | Language code (e.g. `zh`, `en`); defaults to config value |
 
-**响应字段**：
+**Response fields**:
 
-| 字段 | 类型 | 说明 |
+| Field | Type | Description |
 |---|---|---|
-| `text` | string | 完整转写文本 |
-| `language` | string | 检测到/指定的语言 |
-| `segments` | array | 分段结果列表 |
-| `segments[].id` | int | 分段 ID |
-| `segments[].start` | float | 开始时间（秒） |
-| `segments[].end` | float | 结束时间（秒） |
-| `segments[].text` | string | 分段文本 |
+| `text` | string | Full transcription text |
+| `language` | string | Detected or specified language |
+| `segments` | array | List of segment results |
+| `segments[].id` | int | Segment ID |
+| `segments[].start` | float | Start time (seconds) |
+| `segments[].end` | float | End time (seconds) |
+| `segments[].text` | string | Segment text |
 
-## POST /api/v1/tasks（异步接口）
+## POST /api/v1/tasks (Asynchronous)
 
-上传音频文件并提交后台异步转写任务，立即返回 `task_id`。
+Upload an audio file and submit it for background transcription. Returns a `task_id` immediately.
 
-**请求参数**：同上
+**Request parameters**: Same as above
 
-**响应示例**：
+**Response example**:
 
 ```json
 {
@@ -58,85 +58,85 @@
 
 ## GET /api/v1/tasks
 
-获取所有任务列表，按创建时间倒序。
+List all tasks ordered by creation time (descending).
 
-**查询参数**：
+**Query parameters**:
 
-| 参数 | 类型 | 说明 |
+| Parameter | Type | Description |
 |---|---|---|
-| `limit` | int | 最大返回数量（默认 100） |
-| `offset` | int | 偏移量（默认 0） |
+| `limit` | int | Max results (default 100) |
+| `offset` | int | Offset (default 0) |
 
 ## GET /api/v1/tasks/{task_id}
 
-获取单个任务的详细信息和当前状态。
+Get details and current status of a single task.
 
-**任务状态说明**：
+**Task statuses**:
 
-| 状态 | 说明 |
+| Status | Description |
 |---|---|
-| `pending` | 已提交，等待处理 |
-| `processing` | 正在转写中 |
-| `completed` | 转写完成，可下载结果 |
-| `failed` | 转写失败 |
+| `pending` | Submitted, waiting to be processed |
+| `processing` | Transcription in progress |
+| `completed` | Transcription finished, results available for download |
+| `failed` | Transcription failed |
 
 ## DELETE /api/v1/tasks/{task_id}
 
-删除任务记录及其结果文件。
+Delete a task record and its result files.
 
 ## GET /api/v1/tasks/{task_id}/download/{format}
 
-下载转写结果文件。
+Download the transcription result file.
 
-**支持的格式**：
+**Supported formats**:
 
-| format | 说明 |
+| format | Description |
 |---|---|
-| `txt` | 纯文本，包含完整转写内容 |
-| `srt` | SRT 字幕文件，含时间轴，可直接导入播放器 |
-| `json` | 结构化 JSON，包含完整文本和分段信息 |
+| `txt` | Plain text with the full transcription |
+| `srt` | SRT subtitle file with timestamps, importable into media players |
+| `json` | Structured JSON with full text and segment data |
 
-## 使用示例
+## Usage Examples
 
-### curl 调用
+### curl
 
 ```bash
-# 同步转写（等待完成后返回结果）
-curl -X POST http://<服务器IP>:30000/api/v1/transcribe \
+# Synchronous transcription (waits for completion)
+curl -X POST http://<server-ip>:30000/api/v1/transcribe \
   -F "file=@audio.mp3"
 
-# 提交异步转写任务（立即返回 task_id）
-curl -X POST http://<服务器IP>:30000/api/v1/tasks \
+# Submit async task (returns task_id immediately)
+curl -X POST http://<server-ip>:30000/api/v1/tasks \
   -F "file=@audio.mp3"
 
-# 查看任务列表
-curl http://<服务器IP>:30000/api/v1/tasks
+# List all tasks
+curl http://<server-ip>:30000/api/v1/tasks
 
-# 查看单个任务详情
-curl http://<服务器IP>:30000/api/v1/tasks/<task_id>
+# Get task details
+curl http://<server-ip>:30000/api/v1/tasks/<task_id>
 
-# 下载 SRT 字幕文件
-curl -O http://<服务器IP>:30000/api/v1/tasks/<task_id>/download/srt
+# Download SRT subtitle file
+curl -O http://<server-ip>:30000/api/v1/tasks/<task_id>/download/srt
 
-# 删除任务
-curl -X DELETE http://<服务器IP>:30000/api/v1/tasks/<task_id>
+# Delete a task
+curl -X DELETE http://<server-ip>:30000/api/v1/tasks/<task_id>
 
-# 健康检查
-curl http://<服务器IP>:30000/api/v1/health
+# Health check
+curl http://<server-ip>:30000/api/v1/health
 ```
 
-**响应示例**：
+**Response example**:
 
 ```json
 {
-  "text": "你好，欢迎使用语音转文字服务。",
-  "language": "zh",
+  "text": "Hello, welcome to the speech-to-text service.",
+  "language": "en",
   "segments": [
     {
       "id": 0,
       "start": 0.0,
       "end": 3.5,
-      "text": "你好，欢迎使用语音转文字服务。"
+      "text": "Hello, welcome to the speech-to-text service."
     }
   ]
 }
